@@ -63,6 +63,7 @@ PURPOSE:
 #error Define ZB_SECURITY
 #endif
 
+zb_uchar_t *data = "Juliya Bessonova";
 
 /*! \addtogroup ZB_TESTS */
 /*! @{ */
@@ -153,17 +154,23 @@ static void send_data(zb_buf_t *buf)
 
   buf->u.hdr.handle = 0x11;
 
+  // Modify zdo_start_secur example to transfer user data. 
+  for (i = 0 ; i < ZB_TEST_DATA_SIZE ; ++i)
+  {
+    ptr[i] = data[i];
+  }
+
+
 #if 0   /* test with wrong pan_id after join */
   MAC_PIB().mac_pan_id = 0x1aaa;
   ZB_UPDATE_PAN_ID();						   ?
 #endif 													 
 
   // Modify zdo_start_secur example to transfer user data.
-  ptr[6] = "Juliya";
-  /*for (i = 0 ; i < ZB_TEST_DATA_SIZE ; ++i)
+  for (i = 0 ; i < ZB_TEST_DATA_SIZE ; ++i)
   {
-    ptr[i] = i % 32 + '0';
-  }*/
+    ptr[i] = data[i];
+  }
   TRACE_MSG(TRACE_APS2, "Sending apsde_data.request", (FMT__0));
 
   ZB_SCHEDULE_CALLBACK(zb_apsde_data_request, ZB_REF_FROM_BUF(buf));
@@ -184,10 +191,10 @@ void data_indication(zb_uint8_t param)
 
   for (i = 0 ; i < ZB_BUF_LEN(asdu) ; ++i)
   {
-    TRACE_MSG(TRACE_APS2, "%x %c", (FMT__D_C, (int)ptr[i], ptr[i]));
-    if (ptr[i] != i % 32 + '0')
+    TRACE_MSG(TRACE_APS2, "%x %c", (FMT__D_C, (int)ptr[i+2], ptr[i+2]));
+    if (ptr[i+2] != data[i])
     {
-      TRACE_MSG(TRACE_ERROR, "Bad data %hx %c wants %x %c", (FMT__H_C_D_C, ptr[i], ptr[i],
+      TRACE_MSG(TRACE_ERROR, "Bad data %hx %c wants %x %c", (FMT__H_C_D_C, ptr[i], data[i],
                               (int)(i % 32 + '0'), (char)i % 32 + '0'));
     }
   }

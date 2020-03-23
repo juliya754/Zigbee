@@ -70,6 +70,7 @@ static void send_data(zb_buf_t *buf);
 void data_indication(zb_uint8_t param) ZB_CALLBACK;
 zb_ret_t dummy_d(zb_uint8_t param) ZB_CALLBACK;
 
+zb_uchar_t *data = "Juliya Bessonova";
 
 /*
   ZE joins to ZC(ZR), then sends APS packet.
@@ -133,7 +134,7 @@ void zb_zdo_startup_complete(zb_uint8_t param) ZB_CALLBACK
 static void send_data(zb_buf_t *buf)
 {
   zb_apsde_data_req_t *req = ZB_GET_BUF_TAIL(buf, sizeof(zb_apsde_data_req_t));
-  zb_char_t *ptr = NULL;
+  zb_uchar_t *ptr = NULL;
   zb_short_t i;
 
   req->dst_addr.addr_short = 0; /* send to ZC */
@@ -148,11 +149,10 @@ static void send_data(zb_buf_t *buf)
   ZB_BUF_INITIAL_ALLOC(buf, ZB_TEST_DATA_SIZE, ptr);
 
   // Modify zdo_start_secur example to transfer user data.
-  ptr[6] = "Juliya";
-  /*for (i = 0 ; i < ZB_TEST_DATA_SIZE ; ++i)
+  for (i = 0 ; i < ZB_TEST_DATA_SIZE ; ++i)
   {
-    ptr[i] = i % 32 + '0';
-  }*/
+    ptr[i] = data[i];
+  }
   TRACE_MSG(TRACE_APS3, "Sending apsde_data.request", (FMT__0));
 
   ZB_SCHEDULE_CALLBACK(zb_apsde_data_request, ZB_REF_FROM_BUF(buf));
@@ -162,7 +162,7 @@ static void send_data(zb_buf_t *buf)
 void data_indication(zb_uint8_t param)
 {
   zb_ushort_t i;
-  zb_char_t *ptr;
+  zb_uchar_t *ptr;
   zb_buf_t *asdu = (zb_buf_t *)ZB_BUF_FROM_REF(param);
 
   /* Remove APS header from the packet */
@@ -174,9 +174,9 @@ void data_indication(zb_uint8_t param)
   for (i = 0 ; i < ZB_BUF_LEN(asdu) ; ++i)
   {
     TRACE_MSG(TRACE_APS3, "%x %c", (FMT__D_C, (int)ptr[i], ptr[i]));
-    if (ptr[i] != i % 32 + '0')
+    if (ptr[i] != data[i])
     {
-      TRACE_MSG(TRACE_ERROR, "Bad data %hx %c wants %x %c", (FMT__H_C_D_C, ptr[i], ptr[i],
+      TRACE_MSG(TRACE_ERROR, "Bad data %hx %c wants %x %c", (FMT__H_C_D_C, ptr[i], data[i],
                               (int)(i % 32 + '0'), (char)i % 32 + '0'));
     }
 
@@ -184,6 +184,3 @@ void data_indication(zb_uint8_t param)
 
   send_data(asdu);
 }
-
-
-/*! @} */

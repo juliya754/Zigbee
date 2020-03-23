@@ -67,7 +67,7 @@ PURPOSE: Test for ZC application written using ZDO.
 #error Define ZB_SECURITY
 #endif
 
-
+zb_uchar_t *data = "Juliya Bessonova";
   
 
 // change address {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x08} -> {0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0x02, 0x02}
@@ -152,7 +152,7 @@ void zb_zdo_startup_complete(zb_uint8_t param) ZB_CALLBACK
 void data_indication(zb_uint8_t param) ZB_CALLBACK
 {
   zb_ushort_t i;
-  zb_char_t *ptr;
+  zb_uchar_t *ptr;
   zb_buf_t *asdu = (zb_buf_t *)ZB_BUF_FROM_REF(param);
 #ifndef APS_RETRANSMIT_TEST
   zb_apsde_data_indication_t *ind = ZB_GET_BUF_PARAM(asdu, zb_apsde_data_indication_t);
@@ -167,9 +167,9 @@ void data_indication(zb_uint8_t param) ZB_CALLBACK
   for (i = 0 ; i < ZB_BUF_LEN(asdu) ; ++i)
   {
     TRACE_MSG(TRACE_APS2, "%x %c", (FMT__D_C, (int)ptr[i], ptr[i]));
-    if (ptr[i] != i % 32 + '0')
+    if (ptr[i] != data[i])
     {
-      TRACE_MSG(TRACE_ERROR, "Bad data %hx %c wants %x %c", (FMT__H_C_D_C, ptr[i], ptr[i],
+      TRACE_MSG(TRACE_ERROR, "Bad data %hx %c wants %x %c", (FMT__H_C_D_C, ptr[i], data[i],
                               (int)(i % 32 + '0'), (char)i % 32 + '0'));
     }
   }
@@ -187,7 +187,7 @@ void data_indication(zb_uint8_t param) ZB_CALLBACK
 static void zc_send_data(zb_buf_t *buf, zb_uint16_t addr)
 {
     zb_apsde_data_req_t *req;
-    zb_char_t *ptr = NULL;
+    zb_uchar_t *ptr = NULL;
     zb_short_t i;
   
     ZB_BUF_INITIAL_ALLOC(buf, ZB_TEST_DATA_SIZE, ptr);
@@ -202,14 +202,12 @@ static void zc_send_data(zb_buf_t *buf, zb_uint16_t addr)
     buf->u.hdr.handle = 0x11; 
 
     // Modify zdo_start_secur example to transfer user data. 
-    ptr[6] = "Juliya";
-    /*for (i = 0 ; i < ZB_TEST_DATA_SIZE ; ++i)
+    for (i = 0; i < ZB_TEST_DATA_SIZE ; ++i)
     {
-      ptr[i] = i % 32 + '0';
-    }*/
+      ptr[i] = data[i];
+    }
+
     TRACE_MSG(TRACE_APS2, "Sending apsde_data.request", (FMT__0));  
     ZB_SCHEDULE_CALLBACK(zb_apsde_data_request, ZB_REF_FROM_BUF(buf));
   }
 #endif
-
-/*! @} */
